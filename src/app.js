@@ -1,14 +1,15 @@
 // const path = require('path');
 const express = require('express');
 const cors = require('cors');
+require('dotenv').config();
 
-const api = require('./routes/api');
+const api = require('./api');
 
 const app = express();
 
-// Es como dar 'autorizacion'
+// Cross Origin Resource Sharing
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: 'http://localhost:5174',
 }));
 
 // Para que el servidor maneje JSON

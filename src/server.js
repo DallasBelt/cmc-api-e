@@ -1,12 +1,19 @@
 const http = require('http');
 
 const app = require('./app');
+const { sequelize } = require('./config/db');
 
 const server = http.createServer(app);
 
 async function startServer() {
-  server.listen(8000, () => {
+  server.listen(8000, async () => {
     console.log('Server started on port 8000');
+    try {
+      await sequelize.sync();
+      console.log('Connected to the database')
+    } catch (error) {
+      console.error(`Can't connect to the database. ${error}`);
+    }
   });
 }
 
