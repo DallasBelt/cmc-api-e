@@ -8,9 +8,11 @@ const api = require('./api');
 const app = express();
 
 // Cross Origin Resource Sharing
-app.use(cors({
-  origin: 'http://localhost:5174',
-}));
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+  })
+);
 
 // Para que el servidor maneje JSON
 app.use(express.json());
