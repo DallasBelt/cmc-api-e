@@ -1,10 +1,10 @@
 const express = require('express');
 const userRoute = express.Router();
 
-const { 
+const {
   register,
   login,
-  // findAll,
+  findAll,
   // findOne,
   update,
   deleteOne,
@@ -12,13 +12,13 @@ const {
 
 const {
   emailValidator,
-  passwordValidator
+  passwordValidator,
 } = require('../validators/userValidator');
 // const verifyToken = require('../middleware/authMiddleware');
 
 userRoute.post('/register', emailValidator, passwordValidator, register);
 userRoute.post('/login', login);
-// usersRoute.get('/', verifyToken, findAll);
+userRoute.get('/', findAll);
 // usersRoute.get('/:id', verifyToken, findOne);
 userRoute.patch('/:id', passwordValidator, update);
 userRoute.delete('/:id', deleteOne);

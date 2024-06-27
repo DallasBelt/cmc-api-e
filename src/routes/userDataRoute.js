@@ -1,10 +1,15 @@
 const express = require('express');
 const userDataRoute = express.Router();
 
-const { create, findOne, findAll, update } = require('../services/userDataService');
+const {
+  create,
+  findOne,
+  findAll,
+  update,
+} = require('../services/userDataService');
 const {
   idValidator,
-  phoneValidator
+  phoneValidator,
 } = require('../validators/userDataValidator');
 
 const verifyToken = require('../middleware/authMiddleware');
