@@ -6,56 +6,50 @@ const Appointment = require('./appointmentModel');
 const Specialty = require('./specialtyModel');
 const Schedule = require('./scheduleModel');
 
-const Medic = sequelize.define('Medic', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
-    allowNull: false,
+const Medic = sequelize.define(
+  'Medic',
+  {
+    license: {
+      type: DataTypes.STRING,
+      unique: true,
+    },
   },
-  license: {
-    type: DataTypes.STRING,
-    unique: true
-  }
-}, { tableName: 'medic' });
+  { tableName: 'medic' }
+);
 
-
-// 1:N Medic - Appointment
+// 1:N Medic:Appointment
 Medic.hasMany(Appointment, {
   foreignKey: {
     name: 'medicId',
-    allowNull: false
+    allowNull: false,
   },
-  onDelete: 'CASCADE'
+  onDelete: 'CASCADE',
 });
 
 Appointment.belongsTo(Medic, {
-  foreignKey: 'medicId'
+  foreignKey: 'medicId',
 });
 
-
-// N:N Medic - Specialty
+// N:N Medic:Specialty
 Medic.belongsToMany(Specialty, {
   through: 'medicSpecialty',
-  foreignKey: 'medicId'
+  foreignKey: 'medicId',
 });
 
 Specialty.belongsToMany(Medic, {
   through: 'medicSpecialty',
-  foreignKey: 'specialtyId'
+  foreignKey: 'specialtyId',
 });
 
-
-// N:N Medic - Schedyule
+// N:N Medic:Schedule
 Medic.belongsToMany(Schedule, {
   through: 'medicSchedule',
-  foreignKey: 'medicId'
+  foreignKey: 'medicId',
 });
 
 Schedule.belongsToMany(Medic, {
   through: 'medicSchedule',
-  foreignKey: 'scheduleId'
+  foreignKey: 'scheduleId',
 });
-
 
 module.exports = Medic;

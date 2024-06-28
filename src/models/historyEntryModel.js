@@ -4,47 +4,44 @@ const { sequelize } = require('../config/db');
 
 const Exam = require('./examModel');
 
-const HistoryEntry = sequelize.define('HistoryEntry', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
-    allowNull: false,
+const HistoryEntry = sequelize.define(
+  'HistoryEntry',
+  {
+    diagnostic: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    treatment: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    prescription: {
+      type: DataTypes.STRING,
+    },
+    bodyTemperature: {
+      type: DataTypes.INTEGER,
+    },
+    heartRate: {
+      type: DataTypes.INTEGER,
+    },
+    oxygenSaturation: {
+      type: DataTypes.INTEGER,
+    },
   },
-  diagnostic: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  treatment: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  prescription: {
-    type: DataTypes.STRING
-  },
-  bodyTemperature: {
-    type: DataTypes.INTEGER
-  },
-  heartRate: {
-    type: DataTypes.INTEGER
-  },
-  oxygenSaturation: {
-    type: DataTypes.INTEGER
-  },
-}, { tableName: 'historyEntry' });
-
+  { tableName: 'historyEntry' }
+);
 
 // 1:N HistoryEntry - Exam
 HistoryEntry.hasMany(Exam, {
   foreignKey: {
     name: 'historyEntryId',
-    allowNull: false
+    allowNull: false,
   },
-  onDelete: 'CASCADE'
+  onDelete: 'CASCADE',
 });
 
 Exam.belongsTo(HistoryEntry, {
-  foreignKey: 'historyEntryId'
+  foreignKey: 'historyEntryId',
 });
 
-module.exports =  HistoryEntry;
+module.exports = HistoryEntry;

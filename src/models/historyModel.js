@@ -1,31 +1,20 @@
-const { DataTypes } = require('sequelize');
-
 const { sequelize } = require('../config/db');
 
 const HistoryEntry = require('./historyEntryModel');
 
-const History = sequelize.define('History', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
-    allowNull: false,
-  }
-}, { tableName: 'history' });
-
+const History = sequelize.define('History', {}, { tableName: 'history' });
 
 // 1:N History - HistoryEntry
 History.hasMany(HistoryEntry, {
   foreignKey: {
     name: 'historyId',
-    allowNull: false
+    allowNull: false,
   },
-  onDelete: 'CASCADE'
+  onDelete: 'CASCADE',
 });
 
 HistoryEntry.belongsTo(History, {
-  foreignKey: 'historyId'
+  foreignKey: 'historyId',
 });
-
 
 module.exports = History;

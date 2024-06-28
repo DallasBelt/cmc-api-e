@@ -2,50 +2,69 @@ const { DataTypes } = require('sequelize');
 
 const { sequelize } = require('../config/db');
 
-const UserData = require('./userDataModel');
-const Role = require('./roleModel');
+const Admin = require('./adminModel');
+const Medic = require('./medicModel');
+const Secretary = require('./secretaryModel');
 
-const User = sequelize.define('User', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
-    allowNull: false,
+const User = sequelize.define(
+  'User',
+  {
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      notEmpty: true,
+    },
+    role: {
+      type: DataTypes.ENUM,
+      values: ['admin', 'medic', 'secretary'],
+      allowNull: false,
+    },
   },
-  email: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true
-  },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: true,
-    notEmpty: true
-  }
-}, { tableName: 'user' });
+  { tableName: 'user' }
+);
 
-// 1:1 User - UserData
-User.hasOne(UserData, {
+// 1:1 User:Admin
+User.hasOne(Admin, {
   foreignKey: {
     name: 'userId',
-    allowNull: false
+    allowNull: false,
   },
-  onDelete: 'CASCADE'
+  onDelete: 'CASCADE',
 });
 
-UserData.belongsTo(User, {
-  foreignKey: 'userId'
+Admin.belongsTo(User, {
+  foreignKey: 'userId',
 });
 
-// N:N User - Role
-User.belongsToMany(Role, {
-  through: 'userRole',
-  foreignKey: 'userId'
+// 1:1 User:Medic
+User.hasOne(Medic, {
+  foreignKey: {
+    name: 'userId',
+    allowNull: false,
+  },
+  onDelete: 'CASCADE',
 });
 
-Role.belongsToMany(User, {
-  through: 'userRole',
-  foreignKey: 'roleId'
+Medic.belongsTo(User, {
+  foreignKey: 'userId',
 });
 
-module.exports =  User;
+// 1:1 User:Secretary
+User.hasOne(Secretary, {
+  foreignKey: {
+    name: 'userId',
+    allowNull: false,
+  },
+  onDelete: 'CASCADE',
+});
+
+Secretary.belongsTo(User, {
+  foreignKey: 'userId',
+});
+
+module.exports = User;
