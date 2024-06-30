@@ -3,12 +3,26 @@ const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
 
 const Appointment = require('./appointmentModel');
-const Specialty = require('./specialtyModel');
 const Schedule = require('./scheduleModel');
 
 const Medic = sequelize.define(
   'Medic',
   {
+    specialty: {
+      type: DataTypes.ARRAY(
+        DataTypes.ENUM(
+          'General',
+          'Acupuntura',
+          'Cirugía',
+          'Comsiatría',
+          'Dermatología',
+          'Nutrición',
+          'Odontología'
+        )
+      ),
+      defaultValue: ['General'],
+      allowNull: false,
+    },
     license: {
       type: DataTypes.STRING,
       unique: true,
@@ -28,17 +42,6 @@ Medic.hasMany(Appointment, {
 
 Appointment.belongsTo(Medic, {
   foreignKey: 'medicId',
-});
-
-// N:N Medic:Specialty
-Medic.belongsToMany(Specialty, {
-  through: 'medicSpecialty',
-  foreignKey: 'medicId',
-});
-
-Specialty.belongsToMany(Medic, {
-  through: 'medicSpecialty',
-  foreignKey: 'specialtyId',
 });
 
 // N:N Medic:Schedule

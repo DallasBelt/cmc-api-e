@@ -1,18 +1,18 @@
-const express = require('express');
-const patientRoute = express.Router();
+// const express = require('express');
+// const patientRoute = express.Router();
 
-const {
-  create,
-  findOne,
-  findAll,
-  // update
-} = require('../services/patientService');
+// const {
+//   create,
+//   findOne,
+//   findAll,
+//   // update
+// } = require('../services/patientService');
 
-const verifyToken = require('../middleware/authMiddleware');
+// const verifyToken = require('../middleware/authMiddleware');
 
-patientRoute.post('/', verifyToken, create);
-patientRoute.get('/:id', findOne);
-patientRoute.get('/', findAll);
-// patientRoute.patch('/:id', update);
+// patientRoute.post('/', verifyToken, create);
+// patientRoute.get('/:id', findOne);
+// patientRoute.get('/', findAll);
+// // patientRoute.patch('/:id', update);
 
-module.exports = patientRoute;
+// module.exports = patientRoute;
