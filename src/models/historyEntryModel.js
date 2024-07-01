@@ -31,7 +31,7 @@ const HistoryEntry = sequelize.define(
   { tableName: 'historyEntry' }
 );
 
-// 1:N HistoryEntry - Exam
+// 1:N HistoryEntry:Exam
 HistoryEntry.hasMany(Exam, {
   foreignKey: {
     name: 'historyEntryId',

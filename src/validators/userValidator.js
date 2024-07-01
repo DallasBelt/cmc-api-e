@@ -12,17 +12,18 @@ const createUserValidator = [
       }
       return true;
     }),
-  body('password')
-    .isStrongPassword({
-      minLength: 8,
-      minLowercase: 1,
-      minUppercase: 1,
-      minNumbers: 1,
-      minSymbols: 1,
-    })
-    .withMessage(
-      'Password must contain at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 number and 1 special character'
-    ),
+  // body('password')
+  //   .if((value, { req }) => req.body.role === 'admin')
+  //   .isStrongPassword({
+  //     minLength: 8,
+  //     minLowercase: 1,
+  //     minUppercase: 1,
+  //     minNumbers: 1,
+  //     minSymbols: 1,
+  //   })
+  //   .withMessage(
+  //     'Password must contain at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 number and 1 special character'
+  //   ),
   body('role')
     .isIn(['admin', 'medic', 'secretary'])
     .withMessage('Invalid role'),

@@ -36,20 +36,7 @@ const Patient = sequelize.define(
   { tableName: 'patient' }
 );
 
-// 1:N Patient - History
-Patient.hasOne(History, {
-  foreignKey: {
-    name: 'patientId',
-    allowNull: false,
-  },
-  onDelete: 'CASCADE',
-});
-
-History.belongsTo(Patient, {
-  foreignKey: 'patientId',
-});
-
-// 1:N Patient - Appointment
+// 1:N Patient:Appointment
 Patient.hasMany(Appointment, {
   foreignKey: {
     name: 'patientId',
@@ -59,6 +46,19 @@ Patient.hasMany(Appointment, {
 });
 
 Appointment.belongsTo(Patient, {
+  foreignKey: 'patientId',
+});
+
+// 1:N Patient:History
+Patient.hasOne(History, {
+  foreignKey: {
+    name: 'patientId',
+    allowNull: false,
+  },
+  onDelete: 'CASCADE',
+});
+
+History.belongsTo(Patient, {
   foreignKey: 'patientId',
 });
 

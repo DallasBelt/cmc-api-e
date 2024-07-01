@@ -3,8 +3,7 @@ const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
 
 const Admin = require('./adminModel');
-const Medic = require('./medicModel');
-const Secretary = require('./secretaryModel');
+const UserData = require('./userDataModel');
 
 const User = sequelize.define(
   'User',
@@ -41,8 +40,8 @@ Admin.belongsTo(User, {
   foreignKey: 'userId',
 });
 
-// 1:1 User:Medic
-User.hasOne(Medic, {
+// 1:1 User:UserData
+User.hasOne(UserData, {
   foreignKey: {
     name: 'userId',
     allowNull: false,
@@ -50,20 +49,7 @@ User.hasOne(Medic, {
   onDelete: 'CASCADE',
 });
 
-Medic.belongsTo(User, {
-  foreignKey: 'userId',
-});
-
-// 1:1 User:Secretary
-User.hasOne(Secretary, {
-  foreignKey: {
-    name: 'userId',
-    allowNull: false,
-  },
-  onDelete: 'CASCADE',
-});
-
-Secretary.belongsTo(User, {
+UserData.belongsTo(User, {
   foreignKey: 'userId',
 });
 

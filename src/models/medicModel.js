@@ -23,10 +23,6 @@ const Medic = sequelize.define(
       defaultValue: ['General'],
       allowNull: false,
     },
-    license: {
-      type: DataTypes.STRING,
-      unique: true,
-    },
   },
   { tableName: 'medic' }
 );

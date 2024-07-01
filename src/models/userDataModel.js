@@ -3,11 +3,11 @@ const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
 
 const Medic = require('./medicModel');
-const Secretary = require('./secretaryModel');
 const Patient = require('./patientModel');
+const Secretary = require('./secretaryModel');
 
-const PersonData = sequelize.define(
-  'PersonData',
+const UserData = sequelize.define(
+  'UserData',
   {
     documentNumber: {
       type: DataTypes.STRING,
@@ -38,46 +38,46 @@ const PersonData = sequelize.define(
       type: DataTypes.STRING,
     },
   },
-  { tableName: 'personData' }
+  { tableName: 'userData' }
 );
 
-// 1:1 PersonData:Medic
-PersonData.hasOne(Medic, {
+// 1:1 UserData:Medic
+UserData.hasOne(Medic, {
   foreignKey: {
-    name: 'personDataId',
+    name: 'userDataId',
     allowNull: false,
   },
   onDelete: 'CASCADE',
 });
 
-Medic.belongsTo(PersonData, {
-  foreignKey: 'personDataId',
+Medic.belongsTo(UserData, {
+  foreignKey: 'userDataId',
 });
 
-// 1:1 PersonData:Secretary
-PersonData.hasOne(Secretary, {
+// 1:1 UserData:Patient
+UserData.hasOne(Patient, {
   foreignKey: {
-    name: 'personDataId',
+    name: 'userDataId',
     allowNull: false,
   },
   onDelete: 'CASCADE',
 });
 
-Secretary.belongsTo(PersonData, {
-  foreignKey: 'personDataId',
+Patient.belongsTo(UserData, {
+  foreignKey: 'userDataId',
 });
 
-// 1:1 PersonData:Patient
-PersonData.hasOne(Patient, {
+// 1:1 UserData:Secretary
+UserData.hasOne(Secretary, {
   foreignKey: {
-    name: 'personDataId',
+    name: 'userDataId',
     allowNull: false,
   },
   onDelete: 'CASCADE',
 });
 
-Patient.belongsTo(PersonData, {
-  foreignKey: 'personDataId',
+Secretary.belongsTo(UserData, {
+  foreignKey: 'userDataId',
 });
 
-module.exports = PersonData;
+module.exports = UserData;

@@ -2,6 +2,7 @@ const { Sequelize } = require('sequelize');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
+const { sendMedicEmail } = require('../utils/sendEmail');
 
 const { sequelize } = require('../config/db');
 const { createAdmin } = require('./adminService');
@@ -9,46 +10,54 @@ const { createAdmin } = require('./adminService');
 const User = require('../models/userModel');
 
 async function createUser(req, res) {
-  let tx;
+  let transaction;
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() });
     }
 
-    const { email, password, role } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const { email, role } = req.body;
+    const randomPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
     // Start a transaction for creating a new user
-    let tx = await sequelize.transaction();
-
-    // Create a new record in the 'user' table
-    const newUser = await User.create(
-      { email, password: hashedPassword, role },
-      { transaction: tx }
-    );
+    transaction = await sequelize.transaction();
 
     // If the user is an admin, create a new record in the 'admin' table
     if (role === 'admin') {
+      // Create a new record in the 'user' table
+      const newUser = await User.create(
+        { email, password: hashedPassword, role },
+        { transaction }
+      );
+      // Send email with login credentials
+      await sendMedicEmail(email, randomPassword);
       // Pass transaction to adminService
-      await createAdmin(newUser.id, tx);
+      await createAdmin(newUser.id, transaction);
     }
 
-    // If the user is a medic, create a new record in the 'medic' table
+    // If the user is a medic, send an email with login credentials
     // if (role === 'medic') {
-    //   // todo
+    //   const randomPassword = Math.random().toString(36).slice(-8);
+    //   // Create a new record in the 'user' table
+    //   const newUser = await User.create(
+    //     { email, password: randomPassword, role },
+    //     { transaction }
+    //   );
+    //   await sendMedicEmail(email, randomPassword);
     // }
 
     // Commit the transaction
-    await tx.commit();
+    await transaction.commit();
 
     return res.status(201).json({ message: 'User successfully created!' });
   } catch (error) {
     console.log('Error creating user:', error);
 
     // If an error occurrs, revert the transaction
-    if (tx) {
-      await tx.rollback();
+    if (transaction) {
+      await transaction.rollback();
     }
 
     // Unique constraint error
