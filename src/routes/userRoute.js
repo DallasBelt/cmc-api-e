@@ -11,17 +11,17 @@ const {
 } = require('../services/userService');
 
 const {
-  updateUserValidator,
   createUserValidator,
+  updateUserValidator,
 } = require('../validators/userValidator');
 
 const verifyToken = require('../middleware/authMiddleware');
 
 userRoute.post('/create', createUserValidator, createUser);
-userRoute.post('/login', verifyToken, login);
-userRoute.get('/:id', findOne);
-userRoute.get('/', findAll);
-userRoute.patch('/:id', updateUserValidator, update);
-userRoute.delete('/:id', deleteOne);
+userRoute.post('/login', login);
+userRoute.get('/:id', verifyToken, findOne);
+userRoute.get('/', verifyToken, findAll);
+userRoute.patch('/:id', verifyToken, updateUserValidator, update);
+userRoute.delete('/:id', verifyToken, deleteOne);
 
 module.exports = userRoute;
