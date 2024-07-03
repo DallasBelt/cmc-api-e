@@ -1,19 +1,10 @@
 const { body } = require('express-validator');
 
 const createUserValidator = [
-  body('email')
-    .isEmail()
-    .withMessage('Invalid email!')
-    .custom((value, { req }) => {
-      if (req.body.role !== 'admin' && value.includes('admin')) {
-        throw new Error(
-          "Non-admin users cannot have 'admin' in their email address."
-        );
-      }
-      return true;
-    }),
+  body('email').isEmail().withMessage('Invalid email!'),
+
   body('password')
-    .if(body('role').equals('admin'))
+    .if((_, { req }) => req.body.role && req.body.role.includes('admin'))
     .exists({ checkFalsy: true })
     .withMessage('Password is required for admin role.')
     .bail()
@@ -25,15 +16,25 @@ const createUserValidator = [
       minSymbols: 1,
     })
     .withMessage(
-      'Password must contain at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 number and 1 special character'
+      'Password must contain at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 number and 1 special character.'
     ),
+
   body('role')
-    .isIn(['admin', 'medic', 'secretary'])
-    .withMessage('Invalid role'),
+    .isArray()
+    .withMessage('Role must be an array.')
+    .custom((value) => {
+      const validRoles = ['admin', 'medic', 'patient', 'secretary'];
+      for (let role of value) {
+        if (!validRoles.includes(role)) {
+          throw new Error('Invalid role!');
+        }
+      }
+      return true;
+    }),
 ];
 
 const updateUserValidator = [
-  body('email').optional().isEmail().withMessage('Invalid email'),
+  body('email').optional().isEmail().withMessage('Invalid email!'),
   body('newPassword')
     .optional()
     .isStrongPassword({
@@ -44,7 +45,7 @@ const updateUserValidator = [
       minSymbols: 1,
     })
     .withMessage(
-      'Password must contain at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 number and 1 special character'
+      'Password must contain at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 number and 1 special character.'
     ),
 ];
 

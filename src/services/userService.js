@@ -2,17 +2,22 @@ const { Sequelize } = require('sequelize');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
-const { sendMedicEmail } = require('../utils/sendEmail');
+const { sendNewUserEmail } = require('../utils/sendEmail');
 
 const { sequelize } = require('../config/db');
-const { createAdmin } = require('./adminService');
+const { create: createAdmin } = require('./adminService');
 
 const User = require('../models/userModel');
 
-async function createUser(req, res) {
+async function create(req, res) {
   let transaction;
-  let hashedPassword;
-  let randomPassword = Math.random().toString(36).slice(-8);
+  const randomPassword = Math.random().toString(36).slice(-8);
+  let roles = {
+    admin: ['admin'],
+    medic: ['medic'],
+    patient: ['patient'],
+    secretary: ['secretary'],
+  };
 
   try {
     const errors = validationResult(req);
@@ -25,9 +30,9 @@ async function createUser(req, res) {
     // Start a transaction for creating a new user
     transaction = await sequelize.transaction();
 
-    // If the user is an admin, create a new record in the 'admin' table
-    if (role === 'admin') {
-      hashedPassword = await bcrypt.hash(password, 10);
+    // If the user has an 'admin' role
+    if (role.some((r) => roles.admin.includes(r))) {
+      const hashedPassword = await bcrypt.hash(password, 10);
 
       // Create a new record in the 'user' table
       const newAdminUser = await User.create(
@@ -35,30 +40,29 @@ async function createUser(req, res) {
         { transaction }
       );
 
-      // Pass transaction to adminService
+      // Create a new record in the 'admin' table
       await createAdmin(newAdminUser.id, transaction);
 
-      // If the user is an admin, create a new record in the 'admin' table
-    } else if (role === 'medic') {
-      hashedPassword = await bcrypt.hash(randomPassword, 10);
+      // If the user has a 'medic' role
+    } else if (role.some((r) => roles.medic.includes(r))) {
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
-      // Create a new record in the 'user' table
+      // // Create a new record in the 'user' table
       const newMedicUser = await User.create(
         { email, password: hashedPassword, role },
         { transaction }
       );
 
-      // Pass transaction to medicService
-      // await createMedic(newMedicUser.id, transaction);
-
-      // Send email with login credentials
-      await sendMedicEmail(email, randomPassword);
+      // // Send email with login credentials
+      await sendNewUserEmail(email, randomPassword);
+    } else {
+      return res.status(400).json({ message: 'Invalid role!' });
     }
 
     // Commit the transaction
     await transaction.commit();
 
-    return res.status(201).json({ message: 'User successfully created!' });
+    return res.status(201).json({ message: 'User created successfully!' });
   } catch (error) {
     console.log('Error creating user:', error);
 
@@ -150,23 +154,13 @@ async function update(req, res) {
     }
 
     const errors = validationResult(req);
-    if (errors.isEmpty()) {
+    if (!errors.isEmpty()) {
       res.status(422).json({ errors: errors.array() });
     }
 
     const { newEmail, currentPassword, newPassword } = req.body;
 
     if (newEmail && newEmail !== user.email) {
-      // Verify if the new email contains 'admin' and if the user is not an admin
-      if (newEmail.includes('admin') && user.role !== 'admin') {
-        return res
-          .status(409)
-          .json({
-            message:
-              "Non-admin users cannot have 'admin' in their email address.",
-          });
-      }
-
       // Verify if the email is already used by another user
       const emailExists = await User.findOne({
         where: { email: newEmail, id: { [Sequelize.Op.ne]: id } },
@@ -226,7 +220,7 @@ async function deleteOne(req, res) {
 }
 
 module.exports = {
-  createUser,
+  create,
   login,
   findOne,
   findAll,

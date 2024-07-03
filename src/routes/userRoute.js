@@ -2,7 +2,7 @@ const express = require('express');
 const userRoute = express.Router();
 
 const {
-  createUser,
+  create,
   login,
   findAll,
   findOne,
@@ -17,7 +17,7 @@ const {
 
 const verifyToken = require('../middleware/authMiddleware');
 
-userRoute.post('/create', createUserValidator, createUser);
+userRoute.post('/create', createUserValidator, create);
 userRoute.post('/login', login);
 userRoute.get('/:id', verifyToken, findOne);
 userRoute.get('/', verifyToken, findAll);

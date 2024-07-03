@@ -8,7 +8,9 @@
 //   update
 // } = require('../services/medicService');
 
-// medicRoute.post('/:id', create);
+// const verifyToken = require('../middleware/authMiddleware');
+
+// medicRoute.get('/', verifyToken, create);
 // medicRoute.get('/:id', findOne);
 // medicRoute.get('/', findAll);
 // medicRoute.patch('/:id', update);

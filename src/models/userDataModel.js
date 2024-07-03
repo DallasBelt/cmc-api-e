@@ -9,14 +9,14 @@ const Secretary = require('./secretaryModel');
 const UserData = sequelize.define(
   'UserData',
   {
+    documentType: {
+      type: DataTypes.ENUM,
+      values: ['c', 'r', 'p'],
+    },
     documentNumber: {
       type: DataTypes.STRING,
       unique: true,
       allowNull: false,
-    },
-    documentType: {
-      type: DataTypes.ENUM,
-      values: ['c', 'r', 'p'],
     },
     dob: {
       type: DataTypes.DATEONLY,

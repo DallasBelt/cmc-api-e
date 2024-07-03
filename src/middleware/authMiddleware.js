@@ -8,7 +8,7 @@ function verifyToken(req, res, next) {
   }
   try {
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    // Se asigna el userId a req.userId. que es una variable creada
+    // Se asigna el userId a req.userId, que es una variable creada
     req.userId = decoded.userId;
     next();
   } catch (error) {

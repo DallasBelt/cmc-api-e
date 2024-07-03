@@ -1,7 +1,7 @@
 const transporter = require('../config/nodemailer');
 const path = require('path');
 
-async function sendMedicEmail(email, password) {
+async function sendNewUserEmail(email, password) {
   const mailOptions = {
     from: 'yadira.ziemann25@ethereal.email',
     to: email,
@@ -33,6 +33,7 @@ async function sendMedicEmail(email, password) {
   };
 
   await transporter.sendMail(mailOptions);
+  console.log('Email sent successfully!');
 }
 
-module.exports = { sendMedicEmail };
+module.exports = { sendNewUserEmail };

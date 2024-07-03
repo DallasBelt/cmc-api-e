@@ -1,6 +1,6 @@
 const Admin = require('../models/adminModel');
 
-async function createAdmin(userId, transaction) {
+async function create(userId, transaction) {
   try {
     // Create a new admin record within the given transaction
     const newAdmin = await Admin.create({ userId }, { transaction });
@@ -12,5 +12,5 @@ async function createAdmin(userId, transaction) {
 }
 
 module.exports = {
-  createAdmin,
+  create,
 };
