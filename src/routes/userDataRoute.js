@@ -3,18 +3,21 @@ const userDataRoute = express.Router();
 
 const {
   create,
-  // findOne,
-  // findAll,
-  // update,
+  findOne,
+  findAll,
+  update,
 } = require('../services/userDataService');
 
-const { createUserDataValidator } = require('../validators/userDataValidator');
+const {
+  createUserDataValidator,
+  updateUserDataValidator,
+} = require('../validators/userDataValidator');
 
-const verifyToken = require('../middleware/authMiddleware');
+const verifyToken = require('../middleware/verifyToken');
 
 userDataRoute.post('/', verifyToken, createUserDataValidator, create);
-// userDataRoute.get('/:id', findOne);
-// userDataRoute.get('/', findAll);
-// userDataRoute.patch('/:id', idValidator, phoneValidator, update);
+userDataRoute.get('/', verifyToken, findOne);
+userDataRoute.get('/', verifyToken, findAll);
+userDataRoute.patch('/', verifyToken, updateUserDataValidator, update);
 
 module.exports = userDataRoute;
