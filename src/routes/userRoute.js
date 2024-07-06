@@ -2,9 +2,9 @@ const express = require('express');
 const userRoute = express.Router();
 
 const {
-  create,
+  register,
+  verify,
   login,
-  updatePassword,
   findAll,
   findOne,
   update,
@@ -12,38 +12,21 @@ const {
   logout,
 } = require('../services/userService');
 
-const verifyToken = require('../middleware/verifyToken');
-const verifyPasswordChange = require('../middleware/verifyPasswordChange');
+const verifyToken = require('../middlewares/verifyToken');
+const verifyEmail = require('../middlewares/verifyEmail');
 
 const {
-  createUserValidator,
+  registerUserValidator,
   updateUserValidator,
 } = require('../validators/userValidator');
 
-userRoute.post('/login', login);
-userRoute.patch(
-  '/update-password',
-  verifyToken,
-  updateUserValidator,
-  updatePassword
-);
-userRoute.post(
-  '/create',
-  verifyToken,
-  verifyPasswordChange,
-  createUserValidator,
-  create
-);
-userRoute.get('/one', verifyToken, verifyPasswordChange, findOne);
-userRoute.get('/all', verifyToken, verifyPasswordChange, findAll);
-userRoute.patch(
-  '/update',
-  verifyToken,
-  verifyPasswordChange,
-  updateUserValidator,
-  update
-);
-userRoute.delete('/delete', verifyToken, verifyPasswordChange, deleteOne);
+userRoute.post('/register', registerUserValidator, register);
+userRoute.get('/verify', verify);
+userRoute.post('/login', verifyEmail, login);
+userRoute.get('/one', verifyToken, findOne);
+userRoute.get('/all', verifyToken, findAll);
+userRoute.patch('/update', verifyToken, updateUserValidator, update);
+userRoute.delete('/delete', verifyToken, deleteOne);
 userRoute.post('/logout', verifyToken, logout);
 
 module.exports = userRoute;

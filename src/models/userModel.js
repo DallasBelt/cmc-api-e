@@ -18,16 +18,17 @@ const User = sequelize.define(
       allowNull: true,
       notEmpty: true,
     },
-    passwordChanged: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false, // New users haven't changed their password yet
-    },
     role: {
-      type: DataTypes.ARRAY(
-        DataTypes.ENUM('admin', 'medic', 'secretary', 'patient')
-      ),
+      type: DataTypes.ENUM('admin', 'medic', 'secretary', 'patient'),
       allowNull: false,
+      defaultValue: 'medic',
+    },
+    verificationCode: {
+      type: DataTypes.STRING,
+    },
+    verified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
   },
   { tableName: 'user' }

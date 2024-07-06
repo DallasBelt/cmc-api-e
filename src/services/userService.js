@@ -1,15 +1,17 @@
 const { Sequelize } = require('sequelize');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
 const { validationResult } = require('express-validator');
 const { sequelize } = require('../config/db');
 
-const { create: createAdmin } = require('./adminService');
-const { sendNewUserEmail } = require('../utils/sendEmail');
+const { sendVerificationLink } = require('../utils/sendEmail');
+const { sendVerificationCompleted } = require('../utils/sendEmail');
 
 const User = require('../models/userModel');
+const UserData = require('../models/userDataModel');
 
-async function create(req, res) {
+async function register(req, res) {
   let transaction;
 
   try {
@@ -19,63 +21,52 @@ async function create(req, res) {
       return res.status(422).json({ errors: errors.array() });
     }
 
-    const { email, role } = req.body;
-    const userRole = req.userRole;
-    if (!userRole) {
-      return res.status(401).json({ message: 'Authorization problem.' });
-    }
-
-    // Check logged in user role
-    if (userRole.toString() === 'admin') {
-      if (role.toString() !== 'medic' && role.toString() !== 'secretary') {
-        return res.status(400).json({ message: 'Forbidden.' });
-      }
-    } else if (userRole.toString() === 'medic') {
-      if (role.toString() !== 'patient') {
-        return res.status(400).json({ message: 'Forbidden.' });
-      }
-    } else if (userRole.toString() === 'secretary') {
-      return res.status(403).json({ message: 'Forbidden' });
-    } else {
-      return res.status(403).json({ message: 'Unauthorized role.' });
-    }
+    // Get the data from the request body
+    const { firstName, lastName, email, password } = req.body;
 
     //Start the transaction
     transaction = await sequelize.transaction();
 
-    let password;
-    let hashedPassword;
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // If the role is 'patient' the password is an empty string
-    if (role === 'patient') {
-      password = '';
-      hashedPassword = await bcrypt.hash(password, 10);
-    } else {
-      // Generete a random password for other roles
-      password = Math.random().toString(36).slice(-8);
-      hashedPassword = await bcrypt.hash(password, 10);
-    }
+    // Generate confirmation code
+    const verificationCode = uuidv4();
 
-    // Create a new user with the provided role
-    await User.create(
+    // Envía el correo electrónico de confirmación
+    await sendVerificationLink(email, verificationCode);
+
+    // Create a new user with the role of 'medic' and unverified status
+    const newUser = await User.create(
       {
         email,
         password: hashedPassword,
-        role,
-        passwordChanged: false,
+        role: 'medic',
+        verificationCode,
+        verified: false,
       },
       { transaction }
     );
 
-    // Send email with login credentials
-    if (role.toString() !== 'patient') {
-      await sendNewUserEmail(email, password);
-    }
+    // Create a new user data record in the 'userData' table
+    await UserData.create(
+      {
+        firstName,
+        lastName,
+        role: 'medic',
+        userId: newUser.id,
+      },
+      { transaction }
+    );
 
     // Commit the transaction
     await transaction.commit();
 
-    return res.status(201).json({ message: 'User created successfully.' });
+    // Response to the client
+    res.status(201).json({
+      message:
+        'User registered successfully. Please verify your email to complete registration.',
+    });
   } catch (error) {
     console.log('Error creating user:', error);
 
@@ -90,6 +81,39 @@ async function create(req, res) {
     }
 
     return res.status(500).json({ message: 'Internal server error.' });
+  }
+}
+
+async function verify(req, res) {
+  const { email, code } = req.query;
+
+  try {
+    const user = await User.findOne({
+      where: { email, verificationCode: code },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid verification.' });
+    }
+
+    const userData = await UserData.findOne({
+      where: { userId: user.id },
+    });
+
+    await sendVerificationCompleted(
+      email,
+      userData.firstName,
+      userData.lastName
+    );
+
+    user.verified = true;
+    user.verificationCode = null;
+    await user.save();
+
+    res.status(200).json({ message: 'Email successfully verified.' });
+  } catch (error) {
+    console.error("Couldn't verify email:", error);
+    res.status(500).json({ message: 'Internal server error.' });
   }
 }
 
@@ -132,37 +156,6 @@ async function login(req, res) {
     return res.status(200).json({ message: 'Successfully logged in.' });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: 'Internal server error.' });
-  }
-}
-
-async function updatePassword(req, res) {
-  try {
-    const userId = req.userId;
-    const { currentPassword, newPassword } = req.body;
-
-    const user = await User.findByPk(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
-    }
-
-    const passwordMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!passwordMatch) {
-      return res
-        .status(400)
-        .json({ message: 'Current password is incorrect.' });
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
-    user.passwordChanged = true;
-
-    await user.save();
-
-    res.clearCookie('token');
-    return res.status(200).json({ message: 'Password changed successfully.' });
-  } catch (error) {
-    console.log('Error changing password:', error);
     return res.status(500).json({ message: 'Internal server error.' });
   }
 }
@@ -303,9 +296,9 @@ async function logout(_, res) {
 }
 
 module.exports = {
-  create,
+  register,
+  verify,
   login,
-  updatePassword,
   findOne,
   findAll,
   update,

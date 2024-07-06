@@ -13,7 +13,7 @@ const {
   updateUserDataValidator,
 } = require('../validators/userDataValidator');
 
-const verifyToken = require('../middleware/verifyToken');
+const verifyToken = require('../middlewares/verifyToken');
 
 userDataRoute.post('/', verifyToken, createUserDataValidator, create);
 userDataRoute.get('/', verifyToken, findOne);

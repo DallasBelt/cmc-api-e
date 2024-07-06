@@ -15,12 +15,9 @@ const UserData = sequelize.define(
     },
     documentNumber: {
       type: DataTypes.STRING,
-      unique: true,
-      allowNull: false,
     },
     dob: {
       type: DataTypes.DATEONLY,
-      allowNull: false,
     },
     firstName: {
       type: DataTypes.STRING,
@@ -32,7 +29,6 @@ const UserData = sequelize.define(
     },
     phone: {
       type: DataTypes.STRING,
-      allowNull: false,
     },
     address: {
       type: DataTypes.STRING,

@@ -20,6 +20,14 @@ const Schedule = sequelize.define(
     },
     days: {
       type: DataTypes.ARRAY(DataTypes.STRING),
+      values: [
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+      ],
       allowNull: false,
     },
   },

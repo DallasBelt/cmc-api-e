@@ -13,7 +13,7 @@ async function createAdminSeed() {
 
     // Check if there's an admin user
     const existingAdmin = await User.findOne({
-      where: { role: ['admin'] },
+      where: { role: 'admin' },
       transaction,
     });
 
@@ -22,9 +22,10 @@ async function createAdminSeed() {
       const adminUser = await User.create(
         {
           email: 'admin@cmc.com',
-          password: process.env.ADMIN_USER_HASH,
+          password: process.env.ADMIN_SECRET,
           passwordChanged: true,
-          role: ['admin'],
+          role: 'admin',
+          verified: true,
         },
         { transaction }
       );
