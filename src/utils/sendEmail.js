@@ -12,7 +12,7 @@ async function sendVerificationLink(email, verificationCode) {
         <h1 style='font-size:20px;'>¡Saludos!</h1>
         <p style='font-size:18px;'>Para completar tu registro en el sistema CMC, por favor haz clic en el siguiente enlace:</p>
         <br />
-        <p style='font-size:18px;'><a href="http://localhost:8000/v1/user/verify?code=${verificationCode}&email=${email}">Verificar correo electrónico</a></p>
+        <p style='font-size:18px;'><a href="http://localhost:8000/v1/user/verify-email?code=${verificationCode}&email=${email}">Verificar correo electrónico</a></p>
         <br />
         <br />
         <p style='font-size:18px;'>Importante: El enlace caducará en 6 horas. Luego de ese tiempo deberás registrarte nuevamente.</p>

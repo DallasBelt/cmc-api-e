@@ -30,10 +30,14 @@ async function register(req, res) {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate confirmation code
+    // Generate verification code
     const verificationCode = uuidv4();
 
-    // Envía el correo electrónico de confirmación
+    // Set verification code expiry to 24 hours from now
+    const verificationCodeExpiry = new Date();
+    verificationCodeExpiry.setHours(verificationCodeExpiry.getHours() + 24);
+
+    // Send the verification email
     await sendVerificationLink(email, verificationCode);
 
     // Create a new user with the role of 'medic' and unverified status
@@ -43,6 +47,7 @@ async function register(req, res) {
         password: hashedPassword,
         role: 'medic',
         verificationCode,
+        verificationCodeExpiry,
         verified: false,
       },
       { transaction }
@@ -84,10 +89,11 @@ async function register(req, res) {
   }
 }
 
-async function verify(req, res) {
+async function verifyEmail(req, res) {
   const { email, code } = req.query;
 
   try {
+    // Find the user with the provided email and verification code
     const user = await User.findOne({
       where: { email, verificationCode: code },
     });
@@ -96,6 +102,14 @@ async function verify(req, res) {
       return res.status(400).json({ message: 'Invalid verification.' });
     }
 
+    // Check if the verification code has expired
+    if (user.verificationCodeExpiry < new Date()) {
+      return res
+        .status(400)
+        .json({ message: 'Verification code has expired.' });
+    }
+
+    // Get the user data to pass it to the sendVerificationCompleted function
     const userData = await UserData.findOne({
       where: { userId: user.id },
     });
@@ -108,6 +122,7 @@ async function verify(req, res) {
 
     user.verified = true;
     user.verificationCode = null;
+    user.verificationCodeExpiry = null;
     await user.save();
 
     res.status(200).json({ message: 'Email successfully verified.' });
@@ -117,17 +132,72 @@ async function verify(req, res) {
   }
 }
 
-async function login(req, res) {
+async function resendVerification(req, res) {
+  // Validate the request body
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() });
+  }
+
+  // Get the data from the request body
+  const { email } = req.body;
+
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      res.status(422).json({ errors: errors.array() });
+    // Find the user by email
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
     }
 
+    if (user.verified) {
+      return res.status(400).json({ message: 'Email already verified.' });
+    }
+
+    // Generate a new verification code
+    const verificationCode = uuidv4();
+
+    // Set a new verification code expiry to 24 hours from now
+    const verificationCodeExpiry = new Date();
+    verificationCodeExpiry.setHours(verificationCodeExpiry.getHours() + 24);
+
+    // Update the user with the new verification code and expiry
+    user.verificationCode = verificationCode;
+    user.verificationCodeExpiry = verificationCodeExpiry;
+    await user.save();
+
+    // Send the new verification email
+    await sendVerificationLink(email, verificationCode);
+
+    res.status(200).json({
+      message: 'A new verification link has been sent to your email address.',
+    });
+  } catch (error) {
+    console.error('Error resending verification email:', error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+}
+
+async function login(req, res) {
+  try {
+    // Validate the request body
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    // Get the data from the request body
     const { email, password } = req.body;
     const user = await User.findOne({ where: { email: email } });
     if (!user) {
       return res.status(401).json({ message: 'Authentication failed.' });
+    }
+
+    // Check if the user has verified their email
+    if (!user.verified) {
+      return res
+        .status(403)
+        .json({ message: 'Please, verify your email first.' });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
@@ -175,7 +245,7 @@ async function findOne(req, res) {
     });
 
     if (!user) {
-      return res.status(404).json({ message: 'User was not found.' });
+      return res.status(404).json({ message: 'User not found.' });
     }
     return res.status(302).json({ user: user });
   } catch (error) {
@@ -197,7 +267,7 @@ async function findAll(_, res) {
       ],
     });
     if (!users) {
-      return res.status(404).json({ message: 'Users were not found.' });
+      return res.status(404).json({ message: 'Users not found.' });
     }
 
     return res.status(302).json({ users: users });
@@ -231,7 +301,7 @@ async function update(req, res) {
         where: { email: newEmail, id: { [Sequelize.Op.ne]: id } },
       });
       if (emailExists) {
-        return res.status(409).json({ message: 'Email is already in use.' });
+        return res.status(409).json({ message: 'Email already in use.' });
       }
 
       // Update the user's email
@@ -263,7 +333,7 @@ async function update(req, res) {
     }
 
     await user.save();
-    return res.status(200).json({ message: 'User was successfully modified.' });
+    return res.status(200).json({ message: 'User successfully modified.' });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: 'Internal server error.' });
@@ -275,10 +345,10 @@ async function deleteOne(req, res) {
     const id = parseInt(req.params.id);
     const user = await User.destroy({ where: { id: id } });
     if (!user) {
-      return res.status(404).json({ message: 'User wad not found.' });
+      return res.status(404).json({ message: 'User not found.' });
     }
 
-    return res.status(200).json({ message: 'User was successfully deleted.' });
+    return res.status(200).json({ message: 'User successfully deleted.' });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: 'Internal server error.' });
@@ -288,16 +358,17 @@ async function deleteOne(req, res) {
 async function logout(_, res) {
   try {
     res.clearCookie('token');
-    return res.status(200).json({ message: 'Successfully logged out.' });
+    return res.status(200).json({ message: 'Logged out Successfully.' });
   } catch (error) {
     console.error('Error clearing cookie:', error);
-    return res.status(500).json({ message: 'Error logging out.' });
+    return res.status(500).json({ message: "Couldn't log out." });
   }
 }
 
 module.exports = {
   register,
-  verify,
+  verifyEmail,
+  resendVerification,
   login,
   findOne,
   findAll,

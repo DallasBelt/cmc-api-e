@@ -3,7 +3,8 @@ const userRoute = express.Router();
 
 const {
   register,
-  verify,
+  verifyEmail,
+  resendVerification,
   login,
   findAll,
   findOne,
@@ -13,19 +14,25 @@ const {
 } = require('../services/userService');
 
 const verifyToken = require('../middlewares/verifyToken');
-const verifyEmail = require('../middlewares/verifyEmail');
 
 const {
-  registerUserValidator,
-  updateUserValidator,
+  registerValidator,
+  loginValidator,
+  resendVerificationValidator,
+  updateValidator,
 } = require('../validators/userValidator');
 
-userRoute.post('/register', registerUserValidator, register);
-userRoute.get('/verify', verify);
-userRoute.post('/login', verifyEmail, login);
+userRoute.post('/register', registerValidator, register);
+userRoute.get('/verify-email', verifyEmail);
+userRoute.post(
+  '/resend-verification',
+  resendVerificationValidator,
+  resendVerification
+);
+userRoute.post('/login', loginValidator, login);
 userRoute.get('/one', verifyToken, findOne);
 userRoute.get('/all', verifyToken, findAll);
-userRoute.patch('/update', verifyToken, updateUserValidator, update);
+userRoute.patch('/update', updateValidator, verifyToken, update);
 userRoute.delete('/delete', verifyToken, deleteOne);
 userRoute.post('/logout', verifyToken, logout);
 

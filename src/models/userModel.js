@@ -15,8 +15,7 @@ const User = sequelize.define(
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: true,
-      notEmpty: true,
+      allowNull: false,
     },
     role: {
       type: DataTypes.ENUM('admin', 'medic', 'secretary', 'patient'),
@@ -25,6 +24,9 @@ const User = sequelize.define(
     },
     verificationCode: {
       type: DataTypes.STRING,
+    },
+    verificationCodeExpiry: {
+      type: DataTypes.DATE,
     },
     verified: {
       type: DataTypes.BOOLEAN,

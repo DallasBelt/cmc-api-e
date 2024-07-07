@@ -1,6 +1,6 @@
 const { body } = require('express-validator');
 
-const registerUserValidator = [
+const registerValidator = [
   body('email').isEmail().withMessage('Invalid email.'),
   body('password')
     .isStrongPassword({
@@ -25,7 +25,24 @@ const registerUserValidator = [
     .withMessage('Last name is required.'),
 ];
 
-const updateUserValidator = [
+const loginValidator = [
+  body('email')
+    .isEmail()
+    .withMessage('Invalid email.')
+    .notEmpty()
+    .withMessage('Email is required.'),
+  body('password').notEmpty().withMessage('Password is required.'),
+];
+
+const resendVerificationValidator = [
+  body('email')
+    .isEmail()
+    .withMessage('Invalid email.')
+    .notEmpty()
+    .withMessage('Email is required.'),
+];
+
+const updateValidator = [
   body('email').optional().isEmail().withMessage('Invalid email.'),
   body('newPassword')
     .optional()
@@ -42,6 +59,8 @@ const updateUserValidator = [
 ];
 
 module.exports = {
-  registerUserValidator,
-  updateUserValidator,
+  registerValidator,
+  loginValidator,
+  resendVerificationValidator,
+  updateValidator,
 };
