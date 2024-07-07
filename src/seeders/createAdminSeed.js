@@ -1,3 +1,5 @@
+const bcrypt = require('bcrypt');
+
 const { sequelize } = require('../config/db');
 
 const Admin = require('../models/adminModel');
@@ -18,12 +20,14 @@ async function createAdminSeed() {
     });
 
     if (!existingAdmin) {
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+
       // Create an admin user
       const adminUser = await User.create(
         {
-          email: 'admin@cmc.com',
-          password: process.env.ADMIN_SECRET,
-          passwordChanged: true,
+          email: process.env.ADMIN_EMAIL,
+          password: hashedPassword,
           role: 'admin',
           verified: true,
         },

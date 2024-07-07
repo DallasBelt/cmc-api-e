@@ -10,6 +10,7 @@ const { sendVerificationCompleted } = require('../utils/sendEmail');
 
 const User = require('../models/userModel');
 const UserData = require('../models/userDataModel');
+const Medic = require('../models/medicModel');
 
 async function register(req, res) {
   let transaction;
@@ -53,13 +54,21 @@ async function register(req, res) {
       { transaction }
     );
 
-    // Create a new user data record in the 'userData' table
-    await UserData.create(
+    // Create a new record in the 'userData' table
+    const newUserData = await UserData.create(
       {
         firstName,
         lastName,
         role: 'medic',
         userId: newUser.id,
+      },
+      { transaction }
+    );
+
+    // Create a new record in the 'medic' table
+    await Medic.create(
+      {
+        userDataId: newUserData.id,
       },
       { transaction }
     );
