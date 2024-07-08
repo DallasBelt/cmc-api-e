@@ -1,15 +1,17 @@
 const express = require('express');
 
+const personRoute = require('./routes/personRoute');
+const personDataRoute = require('./routes/personDataRoute');
 const userRoute = require('./routes/userRoute');
-const userDataRoute = require('./routes/userDataRoute');
-// const medicRoute = require('./routes/medicRoute');
-// const patientRoute = require('./routes/patientRoute');
+const medicRoute = require('./routes/medicRoute');
+const assistantRoute = require('./routes/assistantRoute');
 
 const api = express.Router();
 
+api.use('/person', personRoute);
+api.use('/personData', personDataRoute);
 api.use('/user', userRoute);
-api.use('/userData', userDataRoute);
-// api.use('/medic', medicRoute);
-// api.use('/patient', patientRoute);
+api.use('/medic', medicRoute);
+api.use('/assistant', assistantRoute);
 
 module.exports = api;

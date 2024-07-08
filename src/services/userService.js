@@ -8,11 +8,15 @@ const { sequelize } = require('../config/db');
 const { sendVerificationLink } = require('../utils/sendEmail');
 const { sendVerificationCompleted } = require('../utils/sendEmail');
 
-const User = require('../models/userModel');
-const UserData = require('../models/userDataModel');
-const Medic = require('../models/medicModel');
+const { createPerson } = require('./personService');
+const { createPersonData } = require('./personDataService');
+const { createMedic } = require('./medicService');
+const { createAssistant } = require('./assistantService');
 
-async function register(req, res) {
+const User = require('../models/userModel');
+const UserData = require('../models/personDataModel');
+
+async function create(req, res) {
   let transaction;
 
   try {
@@ -23,7 +27,19 @@ async function register(req, res) {
     }
 
     // Get the data from the request body
-    const { firstName, lastName, email, password } = req.body;
+    const {
+      email,
+      password,
+      role,
+      documentType,
+      documentNumber,
+      firstName,
+      lastName,
+      dob,
+      phone,
+      address,
+      specialty,
+    } = req.body;
 
     //Start the transaction
     transaction = await sequelize.transaction();
@@ -41,37 +57,57 @@ async function register(req, res) {
     // Send the verification email
     await sendVerificationLink(email, verificationCode);
 
-    // Create a new user with the role of 'medic' and unverified status
+    // Create a new record in the 'person' table
+    const newPerson = await createPerson({ transaction });
+
+    // Create a new record in the 'personData' table
+    const newPersonData = await createPersonData(
+      {
+        documentType,
+        documentNumber,
+        firstName,
+        lastName,
+        email,
+        dob,
+        phone,
+        address,
+        personId: newPerson.id,
+      },
+      { transaction }
+    );
+
+    // Create a new record in the 'user' table
     const newUser = await User.create(
       {
         email,
         password: hashedPassword,
-        role: 'medic',
+        role,
         verificationCode,
         verificationCodeExpiry,
-        verified: false,
+        verified: false, // The user needs to verify their email
+        personDataId: newPersonData.id,
       },
       { transaction }
     );
 
-    // Create a new record in the 'userData' table
-    const newUserData = await UserData.create(
-      {
-        firstName,
-        lastName,
-        role: 'medic',
-        userId: newUser.id,
-      },
-      { transaction }
-    );
-
-    // Create a new record in the 'medic' table
-    await Medic.create(
-      {
-        userDataId: newUserData.id,
-      },
-      { transaction }
-    );
+    if (role === 'medic') {
+      // Create a new record in the 'medic' table
+      await createMedic(
+        {
+          specialty,
+          userId: newUser.id,
+        },
+        { transaction }
+      );
+    } else if (role === 'assistant') {
+      // Create a new record in the 'assistant' table
+      await createAssistant(
+        {
+          userId: newUser.id,
+        },
+        { transaction }
+      );
+    }
 
     // Commit the transaction
     await transaction.commit();
@@ -375,7 +411,7 @@ async function logout(_, res) {
 }
 
 module.exports = {
-  register,
+  create,
   verifyEmail,
   resendVerification,
   login,

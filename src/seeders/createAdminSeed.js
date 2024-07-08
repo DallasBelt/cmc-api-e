@@ -2,8 +2,10 @@ const bcrypt = require('bcrypt');
 
 const { sequelize } = require('../config/db');
 
-const Admin = require('../models/adminModel');
+const Person = require('../models/personModel');
+const PersonData = require('../models/personDataModel');
 const User = require('../models/userModel');
+const Admin = require('../models/adminModel');
 
 async function createAdminSeed() {
   let transaction;
@@ -23,21 +25,30 @@ async function createAdminSeed() {
       // Hash the password
       const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
 
-      // Create an admin user
-      const adminUser = await User.create(
+      // Create the record in the 'person' table
+      const person = await Person.create({}, { transaction });
+
+      // Create the record in the 'personData' table
+      const personData = await PersonData.create(
+        { email: process.env.ADMIN_EMAIL, personId: person.id },
+        { transaction }
+      );
+
+      // Create the record in the 'user' table
+      const user = await User.create(
         {
-          email: process.env.ADMIN_EMAIL,
           password: hashedPassword,
           role: 'admin',
           verified: true,
+          personDataId: personData.id,
         },
         { transaction }
       );
 
-      // Create a new record for the admin user in the 'admin' table
+      // Create the record in the 'admin' table
       await Admin.create(
         {
-          userId: adminUser.id,
+          userId: user.id,
         },
         { transaction }
       );

@@ -3,22 +3,18 @@ const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
 
 const Admin = require('./adminModel');
-const UserData = require('./userDataModel');
+const Medic = require('./medicModel');
+const Assistant = require('./assistantModel');
 
 const User = sequelize.define(
   'User',
   {
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-    },
     password: {
       type: DataTypes.STRING,
       allowNull: false,
     },
     role: {
-      type: DataTypes.ENUM('admin', 'medic', 'secretary', 'patient'),
+      type: DataTypes.ENUM('admin', 'medic', 'assistant'),
       allowNull: false,
       defaultValue: 'medic',
     },
@@ -49,8 +45,8 @@ Admin.belongsTo(User, {
   foreignKey: 'userId',
 });
 
-// 1:1 User:UserData
-User.hasOne(UserData, {
+// 1:1 UserData:Medic
+User.hasOne(Medic, {
   foreignKey: {
     name: 'userId',
     allowNull: false,
@@ -58,7 +54,20 @@ User.hasOne(UserData, {
   onDelete: 'CASCADE',
 });
 
-UserData.belongsTo(User, {
+Medic.belongsTo(User, {
+  foreignKey: 'userId',
+});
+
+// 1:1 UserData:Assistant
+User.hasOne(Assistant, {
+  foreignKey: {
+    name: 'userId',
+    allowNull: false,
+  },
+  onDelete: 'CASCADE',
+});
+
+Assistant.belongsTo(User, {
   foreignKey: 'userId',
 });
 

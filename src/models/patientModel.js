@@ -16,11 +16,11 @@ const Patient = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    personalAntecedent: {
+    personalBackground: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    familyAntecedent: {
+    familyBackground: {
       type: DataTypes.STRING,
       allowNull: false,
     },

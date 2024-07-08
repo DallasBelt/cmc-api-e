@@ -2,7 +2,7 @@ const express = require('express');
 const userRoute = express.Router();
 
 const {
-  register,
+  create,
   verifyEmail,
   resendVerification,
   login,
@@ -16,13 +16,13 @@ const {
 const verifyToken = require('../middlewares/verifyToken');
 
 const {
-  registerValidator,
+  createValidator,
   loginValidator,
   resendVerificationValidator,
   updateValidator,
 } = require('../validators/userValidator');
 
-userRoute.post('/register', registerValidator, register);
+userRoute.post('/create', createValidator, create);
 userRoute.get('/verify-email', verifyEmail);
 userRoute.post(
   '/resend-verification',

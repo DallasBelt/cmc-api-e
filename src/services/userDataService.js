@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator');
 
-const UserData = require('../models/userDataModel');
+const UserData = require('../models/personDataModel');
 
 async function create(req, res) {
   try {
