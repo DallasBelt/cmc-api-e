@@ -10,8 +10,6 @@ function verifyToken(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     req.userId = decoded.userId;
-    req.userRole = decoded.userRole;
-    req.passwordChanged = decoded.passwordChanged;
     next();
   } catch (error) {
     res.status(401).json({ error: 'Invalid token.' });
