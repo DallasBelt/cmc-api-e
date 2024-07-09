@@ -7,12 +7,12 @@ const server = http.createServer(app);
 
 async function startServer() {
   server.listen(8000, async () => {
-    console.log('Server started successfuly on port 8000!');
+    console.log('Server started successfuly on port 8000.');
     try {
       await sequelize.sync();
-      console.log('Connection to the database was successful!');
+      console.log('Connection to the database was successful.');
     } catch (error) {
-      console.error(`Can't connect to the database! ${error}`);
+      console.error(`Error connecting to the database: ${error}`);
     }
   });
 }

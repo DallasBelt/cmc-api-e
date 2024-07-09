@@ -2,14 +2,14 @@ const express = require('express');
 const userRoute = express.Router();
 
 const {
-  create,
+  createUser,
   verifyEmail,
   resendVerification,
   login,
-  findAll,
-  findOne,
-  update,
-  deleteOne,
+  findOneUser,
+  findAllUsers,
+  updateUser,
+  deleteUser,
   logout,
 } = require('../services/userService');
 
@@ -22,7 +22,7 @@ const {
   updateValidator,
 } = require('../validators/userValidator');
 
-userRoute.post('/create', createValidator, create);
+userRoute.post('/create', createValidator, createUser);
 userRoute.get('/verify-email', verifyEmail);
 userRoute.post(
   '/resend-verification',
@@ -30,10 +30,11 @@ userRoute.post(
   resendVerification
 );
 userRoute.post('/login', loginValidator, login);
-userRoute.get('/one', verifyToken, findOne);
-userRoute.get('/all', verifyToken, findAll);
-userRoute.patch('/update', updateValidator, verifyToken, update);
-userRoute.delete('/delete', verifyToken, deleteOne);
+
+userRoute.get('/one', verifyToken, findOneUser);
+userRoute.get('/all', verifyToken, findAllUsers);
+userRoute.patch('/update', updateValidator, verifyToken, updateUser);
+userRoute.delete('/delete', verifyToken, deleteUser);
 userRoute.post('/logout', verifyToken, logout);
 
 module.exports = userRoute;

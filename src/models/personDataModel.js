@@ -8,13 +8,6 @@ const Patient = require('./patientModel');
 const PersonData = sequelize.define(
   'PersonData',
   {
-    documentType: {
-      type: DataTypes.ENUM,
-      values: ['c', 'r', 'p'],
-    },
-    documentNumber: {
-      type: DataTypes.STRING,
-    },
     firstName: {
       type: DataTypes.STRING,
     },
@@ -22,6 +15,13 @@ const PersonData = sequelize.define(
       type: DataTypes.STRING,
     },
     email: {
+      type: DataTypes.STRING,
+      unique: true,
+    },
+    documentType: {
+      type: DataTypes.ENUM('c', 'r', 'p'),
+    },
+    documentNumber: {
       type: DataTypes.STRING,
       unique: true,
     },
@@ -40,6 +40,7 @@ const PersonData = sequelize.define(
 
 // 1:1 PersonData:User
 PersonData.hasOne(User, {
+  as: 'user',
   foreignKey: {
     name: 'personDataId',
     allowNull: false,
@@ -48,6 +49,7 @@ PersonData.hasOne(User, {
 });
 
 User.belongsTo(PersonData, {
+  as: 'personData',
   foreignKey: 'personDataId',
 });
 

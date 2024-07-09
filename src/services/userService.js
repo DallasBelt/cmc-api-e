@@ -14,9 +14,9 @@ const { createMedic } = require('./medicService');
 const { createAssistant } = require('./assistantService');
 
 const User = require('../models/userModel');
-const UserData = require('../models/personDataModel');
+const PersonData = require('../models/personDataModel');
 
-async function create(req, res) {
+async function createUser(req, res) {
   let transaction;
 
   try {
@@ -54,20 +54,33 @@ async function create(req, res) {
     const verificationCodeExpiry = new Date();
     verificationCodeExpiry.setHours(verificationCodeExpiry.getHours() + 24);
 
-    // Send the verification email
-    await sendVerificationLink(email, verificationCode);
-
     // Create a new record in the 'person' table
     const newPerson = await createPerson({ transaction });
+
+    // Prepare personData object
+    const personData = {
+      email,
+      firstName,
+      lastName,
+      personId: newPerson.id,
+    };
+
+    if (role !== 'medic') {
+      personData.documentType = documentType || null;
+      personData.documentNumber = documentNumber || null;
+      personData.dob = dob || null;
+      personData.phone = phone || null;
+      personData.address = address || null;
+    }
 
     // Create a new record in the 'personData' table
     const newPersonData = await createPersonData(
       {
-        documentType,
-        documentNumber,
+        email,
         firstName,
         lastName,
-        email,
+        documentType,
+        documentNumber,
         dob,
         phone,
         address,
@@ -79,7 +92,6 @@ async function create(req, res) {
     // Create a new record in the 'user' table
     const newUser = await User.create(
       {
-        email,
         password: hashedPassword,
         role,
         verificationCode,
@@ -111,6 +123,9 @@ async function create(req, res) {
 
     // Commit the transaction
     await transaction.commit();
+
+    // Send the verification email
+    await sendVerificationLink(email, verificationCode);
 
     // Response to the client
     res.status(201).json({
@@ -233,8 +248,14 @@ async function login(req, res) {
 
     // Get the data from the request body
     const { email, password } = req.body;
-    const user = await User.findOne({ where: { email: email } });
-    if (!user) {
+
+    // Find the email in the 'personData' table
+    const personData = await PersonData.findOne({ where: { email: email } });
+
+    // Find the user
+    const user = await User.findOne({ where: { personDataId: personData.id } });
+
+    if (!personData || !user) {
       return res.status(401).json({ message: 'Authentication failed.' });
     }
 
@@ -254,8 +275,6 @@ async function login(req, res) {
     const token = jwt.sign(
       {
         userId: user.id,
-        userRole: user.role,
-        passwordChanged: user.passwordChanged,
       },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: '1h' }
@@ -275,17 +294,22 @@ async function login(req, res) {
   }
 }
 
-async function findOne(req, res) {
+async function findOneUser(req, res) {
   try {
+    // Get the userId from the token
     const userId = req.userId;
+    if (!userId) {
+      return res.status(404).json({ message: 'Authorization problem.' });
+    }
+
     const user = await User.findOne({
       where: { id: userId },
-      attributes: [
-        'email',
-        'role',
-        'passwordChanged',
-        'createdAt',
-        'updatedAt',
+      attributes: ['role', 'verified', 'lastSeen', 'createdAt', 'updatedAt'],
+      include: [
+        {
+          model: PersonData,
+          attributes: ['email', 'firstName', 'lastName'],
+        },
       ],
     });
 
@@ -299,30 +323,30 @@ async function findOne(req, res) {
   }
 }
 
-async function findAll(_, res) {
+async function findAllUsers(_, res) {
   try {
-    const users = await User.findAll({
-      attributes: [
-        'id',
-        'email',
-        'role',
-        'passwordChanged',
-        'createdAt',
-        'updatedAt',
+    const user = await User.findAll({
+      attributes: ['role', 'verified', 'lastSeen', 'createdAt', 'updatedAt'],
+      include: [
+        {
+          model: PersonData,
+          as: 'personData',
+          attributes: ['email', 'firstName', 'lastName'],
+        },
       ],
     });
-    if (!users) {
-      return res.status(404).json({ message: 'Users not found.' });
-    }
 
-    return res.status(302).json({ users: users });
+    if (!user) {
+      return res.status(404).json({ message: 'No users found.' });
+    }
+    return res.status(302).json({ user: user });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({ message: 'Internal server error.' });
   }
 }
 
-async function update(req, res) {
+async function updateUser(req, res) {
   let hasChanges = false;
 
   try {
@@ -385,7 +409,7 @@ async function update(req, res) {
   }
 }
 
-async function deleteOne(req, res) {
+async function deleteUser(req, res) {
   try {
     const id = parseInt(req.params.id);
     const user = await User.destroy({ where: { id: id } });
@@ -400,24 +424,32 @@ async function deleteOne(req, res) {
   }
 }
 
-async function logout(_, res) {
+async function logout(req, res) {
   try {
+    // Get the userId from the token
+    const userId = req.userId;
+
+    // Write the date to the 'lastSeen' column
+    await User.update({ lastSeen: new Date() }, { where: { id: userId } });
+
+    // Delete the cookie with the token
     res.clearCookie('token');
-    return res.status(200).json({ message: 'Logged out Successfully.' });
+
+    return res.status(200).json({ message: 'Logged out successfully.' });
   } catch (error) {
     console.error('Error clearing cookie:', error);
-    return res.status(500).json({ message: "Couldn't log out." });
+    return res.status(500).json({ message: 'Error logging out.' });
   }
 }
 
 module.exports = {
-  create,
+  createUser,
   verifyEmail,
   resendVerification,
   login,
-  findOne,
-  findAll,
-  update,
-  deleteOne,
+  findOneUser,
+  findAllUsers,
+  updateUser,
+  deleteUser,
   logout,
 };

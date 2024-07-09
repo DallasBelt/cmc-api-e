@@ -1,6 +1,7 @@
 const { body } = require('express-validator');
 
 const createValidator = [
+  body('role', 'Invalid role.').isIn(['medic', 'assistant']),
   body('email', 'Invalid email.').isEmail(),
   body(
     'password',
@@ -12,12 +13,6 @@ const createValidator = [
     minNumbers: 1,
     minSymbols: 1,
   }),
-  body('role').custom((value) => {
-    if (value !== 'medic' && value !== 'assistant') {
-      throw new Error('Invalid role.');
-    }
-    return true;
-  }),
   body('firstName', 'First name is required.').trim().notEmpty().isString(),
   body('lastName', 'Last name is required.').trim().notEmpty().isString(),
   body('documentType', 'Invalid document type.')
@@ -25,7 +20,6 @@ const createValidator = [
     .isIn(['c', 'r', 'p']),
   body('documentNumber')
     .optional({ nullable: true, checkFalsy: true })
-    .notEmpty()
     .custom((value, { req }) => {
       const documentType = req.body.documentType;
       if (documentType === 'c') {
@@ -44,33 +38,29 @@ const createValidator = [
     .isISO8601(),
   body('phone', 'Invalid phone number.')
     .optional({ nullable: true, checkFalsy: true })
-    .isMobilePhone(['es-EC'], { options: { strictMode: false } }),
+    .isMobilePhone(['es-EC'], {
+      options: { strictMode: false },
+    }),
   body('address', 'Address required.')
     .optional({ nullable: true, checkFalsy: true })
+    .trim()
     .notEmpty()
     .isString(),
 ];
 
 const loginValidator = [
-  body('email')
-    .isEmail()
-    .withMessage('Invalid email.')
-    .notEmpty()
-    .withMessage('Email is required.'),
-  body('password').notEmpty().withMessage('Password is required.'),
+  body('email', 'Invalid email.').isEmail(),
+  body('password', 'Password is required.').trim().notEmpty().isString(),
 ];
 
-const resendVerificationValidator = [
-  body('email')
-    .isEmail()
-    .withMessage('Invalid email.')
-    .notEmpty()
-    .withMessage('Email is required.'),
-];
+const resendVerificationValidator = [body('email', 'Invalid email.').isEmail()];
 
 const updateValidator = [
-  body('email').optional().isEmail().withMessage('Invalid email.'),
-  body('newPassword')
+  body('email', 'Invalid email.').optional().isEmail(),
+  body(
+    'newPassword',
+    'Password must contain at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 number and 1 special character.'
+  )
     .optional()
     .isStrongPassword({
       minLength: 8,
@@ -78,10 +68,7 @@ const updateValidator = [
       minUppercase: 1,
       minNumbers: 1,
       minSymbols: 1,
-    })
-    .withMessage(
-      'Password must contain at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 number and 1 special character.'
-    ),
+    }),
 ];
 
 module.exports = {

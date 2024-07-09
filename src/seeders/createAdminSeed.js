@@ -2,10 +2,11 @@ const bcrypt = require('bcrypt');
 
 const { sequelize } = require('../config/db');
 
-const Person = require('../models/personModel');
-const PersonData = require('../models/personDataModel');
+const { createPerson } = require('../services/personService');
+const { createPersonData } = require('../services/personDataService');
+const { createAdmin } = require('../services/adminService');
+
 const User = require('../models/userModel');
-const Admin = require('../models/adminModel');
 
 async function createAdminSeed() {
   let transaction;
@@ -26,10 +27,10 @@ async function createAdminSeed() {
       const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
 
       // Create the record in the 'person' table
-      const person = await Person.create({}, { transaction });
+      const person = await createPerson({ transaction });
 
       // Create the record in the 'personData' table
-      const personData = await PersonData.create(
+      const personData = await createPersonData(
         { email: process.env.ADMIN_EMAIL, personId: person.id },
         { transaction }
       );
@@ -46,7 +47,7 @@ async function createAdminSeed() {
       );
 
       // Create the record in the 'admin' table
-      await Admin.create(
+      await createAdmin(
         {
           userId: user.id,
         },
@@ -66,6 +67,7 @@ async function createAdminSeed() {
       await transaction.rollback();
     }
     console.error('Error while seeding:', error);
+
     process.exit(1);
   }
 }
